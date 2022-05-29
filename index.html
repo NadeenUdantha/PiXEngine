@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PiXEngine</title>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script type="text/javascript" charset="utf-8" src="js/utils.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Graph.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Graphs.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/ObjectMenu.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Vec2.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Engine.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/CanvasRenderer.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/FileLoader.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Camera.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/AudioPlayer.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Settings.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/ObjectMenu2.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Objects.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/Firebase.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/main.js"></script>
+    <style>
+        .ObjectMenu {
+            position: absolute;
+            z-index: 3;
+            display: none;
+        }
+        .ObjectMenu1 {
+            user-select: none;
+            box-shadow: 0 0 2px 2px rgba(0, 0, 0, .4);
+            z-index: 3;
+        }
+        .ObjectMenu1 table {
+            border: 1px solid #929292;
+            padding: 0;
+            margin: 0;
+        }
+        .ObjectMenu1 tr{
+            border: 1px solid #8a8a8a;
+            border-left: none;
+            border-right: none;
+            margin-bottom: -1px;
+            padding-left: .5rem;
+            padding-right: .5rem;
+            padding-top: .15rem;
+            padding-bottom: .15rem;
+            background-color: #e6fff7e3;
+            transition: background-color .3s;
+        }
+        .ObjectMenu1 input {
+            border: none;
+            width: 100%;
+        }
+        .ObjectMenu1 .vecinput::-webkit-inner-spin-button,
+        .ObjectMenu1 .vecinput::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+        .ObjectMenu1 td.unit {
+            width: 2.5rem;
+        }
+        .ObjectMenu1 tr:hover {
+            background-color: #9ad0ffd9;
+        }
+        .ObjectMenu1 tbody.tb1 td:first-child {
+            text-align: right;
+        }
+        .ObjectMenu1 tbody.tb1 td:last-child {
+            text-align: left;
+        }
+        .ObjectMenu2 {
+            display: none;
+            position: absolute;
+            box-shadow: 0 0 2px 2px rgba(0, 0, 0, .4);
+            background: #c0c0c0f8;
+            z-index: 4;
+            padding: 0;
+            width: 200px;
+            height: 200px;
+        }
+        .ObjectMenu2 canvas,
+        .ObjectMenu2 div {
+            user-select: none;
+            position: absolute;
+            padding: 0;
+            z-index: 7;
+        }
+        .ObjectMenu2 input {
+            border: 1px solid black;
+            background: transparent;
+        }
+        .ObjectMenu2 input::-webkit-inner-spin-button,
+        .ObjectMenu2 input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+        #graphtable{
+            border: none;
+            text-align: center;
+        }
+        #graphtable button{
+            width: 200px;
+        }
+        #graphtable input{
+            width: auto;
+        }
+        .graph-del {
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+            font-size: x-large;
+            font-family: sans-serif;
+        }
+        .graph-del:hover {
+            background-color: #dadadadc;
+            color: #ff0000dc;
+            font-weight: bolder;
+        }
+        #graphs{
+            position: absolute;
+            padding: 0;
+            margin: 0;
+            z-index:2;
+            display: none;
+        }
+        .graph{
+            cursor: move;
+            user-select:none;
+            position:absolute;
+            left:0;
+            top:0;
+            opacity:0.9;
+        }
+        .graph canvas{
+            border-width: 2px;
+            border-style: solid;
+            border-top: none;
+            height: 65px;
+        }
+        .graph div{
+            padding-left: 3px;
+            border-width: 2px;
+            border-style: solid;
+            white-space: nowrap;
+        }
+        .graph div span:first-child{
+            display: initial;
+        }
+        .graph div span:last-child{
+            right: 0;
+            position: absolute;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+            font-family: sans-serif;
+            width: 1rem;
+            border-left-width: 2px;
+            border-left-style: solid;
+            transition: all .6s;
+        }
+        .graph div span:last-child:hover {
+            background-color: #dadadadc;
+            color: #ff0000dc;
+            font-weight: bolder;
+        }
+        #xview{
+            display: none;
+            z-index: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .delete-obj-btn{
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body style="margin:0;overflow: hidden;background-repeat: repeat;">
+    <div id="graphs"></div>
+    <div class="ObjectMenu">
+        <div class="ObjectMenu2">
+            <canvas style="z-index:5" width="200px" height="200px"></canvas>
+            <canvas style="z-index:6" width="200px" height="200px"></canvas>
+            <div>
+                x: <input type="number" step="0.01">
+                y: <input type="number" step="0.01">
+            </div>
+        </div>
+        <div class="ObjectMenu1">
+            <table>
+                <tr>
+                    <td>Graphs</td>
+                    <td colspan="2">
+                        <table id="graphtable">
+                            <tr>
+                                <td colspan="2"><button onclick="Graphs.addGraph()">Add Graph...</button></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tbody class="tb1">
+                    <tr>
+                        <td colspan="3"><button class="delete-obj-btn" onclick="ObjectMenu.delete()">Delete Object</button></td>
+                    </tr>
+                    <tr>
+                        <td>Name</td>
+                        <td colspan="2"><input type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Mass</td>
+                        <td><input type="number" step="any" min="0"></td>
+                        <td class="unit">kg</td>
+                    </tr>
+                    <tr>
+                        <td>Radius</td>
+                        <td><input type="number" step="any" min="0"></td>
+                        <td class="unit">m</td>
+                    </tr>
+                    <tr>
+                        <td>COR</td>
+                        <td><input type="number" step="any" min="0"></td>
+                        <td class="unit"></td>
+                    </tr>
+                    <tr>
+                        <td>Sound Frequency</td>
+                        <td><input type="number" min="0" max="24000" step="1" onchange="if(ObjectMenu.obj)AudioPlayer.setFrequency(ObjectMenu.obj,this.valueAsNumber)"></td>
+                        <td class="unit">Hz</td>
+                    </tr>
+                    <tr>
+                        <td>Sound Intensity</td>
+                        <td><input type="number" step=".1" onchange="if(ObjectMenu.obj)AudioPlayer.setGain(ObjectMenu.obj,this.valueAsNumber)"></td>
+                        <td class="unit">Wm<sup>-2</sup></td>
+                    </tr>
+                    <tr>
+                        <td>Position X</td>
+                        <td><input type="number" step="0.1"></td>
+                        <td class="unit">m</td>
+                    </tr>
+                    <tr>
+                        <td>Position Y</td>
+                        <td><input type="number" step="0.1"></td>
+                        <td class="unit">m</td>
+                    </tr>
+                    <tr>
+                        <td>Velocity</td>
+                        <td><input class="vecinput" type="number" onkeydown="return false" step="any"></td>
+                        <td class="unit">ms<sup>-1</sup></td>
+                    </tr>
+                    <tr>
+                        <td>Acceleration</td>
+                        <td><input class="vecinput" type="number" onkeydown="return false" step="any"></td>
+                        <td class="unit">ms<sup>-2</sup></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <canvas id="xview" style="z-index: 1;"></canvas>
+    <div class="settings">
+        <div class="settings-btn">&Lt;</div>
+        <div class="settings2">
+            <div style="padding:0;position: absolute;height: 8rem;">
+                <div>
+                    <div class="main-back-btn" onclick="backToMainMenu()">Back To Main Menu</div>
+                </div>
+                <div>
+                    <div class="main-back-btn" onclick="renderer.removeAllObjects()">Clear</div>
+                </div>
+            </div>
+            <div style="padding:0;position: absolute;overflow: auto;top: 8rem;max-height:37rem;">
+                <div>
+                    Editor Mode:-
+                    <input class="settings-in" name="editor_mode" onchange="if(!this.checked)ObjectMenu.close()" type="checkbox"
+                        checked>
+                </div>
+                <div><button onclick="Objects.exportToFile()">Export to file</button></div>
+                <div>Import from file<br><input type="file" onchange="Objects.importFromFile()"></div>
+                <div><button onclick="Firebase.upload()">Upload file to server</button></div>
+                <div>
+                    Running:-
+                    <input class="settings-in" name="running" type="checkbox" checked>
+                </div>
+                <div>
+                    Debugging Graphs:-
+                    <input class="settings-in" name="show_debugging_graphs" onchange="if(this.checked)addDebuggingGraphs();else removeDebuggingGraphs()"
+                        type="checkbox">
+                </div>
+                <div>
+                    Simulation Speed:<br>
+                    <input class="settings-in" name="simulation_speed" type="number" step="1" value="1">
+                </div>
+                <div>
+                    Gravitational Constant:<br>
+                    <input class="settings-in" name="G" type="number" step="1e-10" id="settings-input-G">
+                </div>
+                <div>
+                    Speed of Sound:<br>
+                    <input class="settings-in" name="sound_speed" value="340" type="number" step="1">
+                </div>
+                <div>
+                    Tracking Object:<br>
+                    <select id="tracing-obj" onchange="ObjectMenu2.trackObjChange()"></select>
+                </div>
+                <div>
+                    Receiver:<br>
+                    <select id="receiver-obj" onchange="Settings.set('receiver',this.value)"></select>
+                </div>
+                <div class="ObjectMenu3"></div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .main-back-btn {
+            position: relative;
+            font-size: 1.4rem;
+            margin: 0 1rem;
+            color: #839eff;
+            width: fit-content;
+            border: 3px solid #577eac;
+            border-radius: 15px;
+            background-color: #000000cc;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFUlEQVQYV2NUZ8j8f5NhOiMjAxQAAChpAwOZIpGiAAAAAElFTkSuQmCC');
+            cursor: pointer;
+            transition: all .5s cubic-bezier(0.93, -0.79, 0.01, 1.91);
+            text-shadow: 0px 0px 5px #9bb1ff7c;
+        }
+
+        .main-back-btn:hover {
+            color: #577bff;
+            text-shadow: 0px 0px 20px #b1c2ff;
+            box-shadow: inset 0px 0px 8px 0px #5c7fff;
+        }
+
+        .ObjectMenu3 {
+            padding-top: 0;
+            padding-bottom: 0;
+            padding: 0;
+            background-color: #4a4a4a;
+        }
+
+        .ObjectMenu3 div {
+            background-color: #868686cf;
+            color: white;
+            padding: .7rem;
+            margin: .6rem 0;
+            transition: all .5s;
+        }
+
+        .ObjectMenu3 div:hover {
+            background-color: #6bff66cf;
+            color: black;
+        }
+
+        .objmenu3-del {
+            text-align: center;
+            cursor: pointer;
+            float: right;
+            padding: 0;
+            width: 4rem;
+            font-family: sans-serif;
+            transition: all .6s;
+        }
+
+        .objmenu3-del:hover {
+            background-color: #09ff00e8;
+            color: #ff0000dc;
+            font-weight: bolder;
+        }
+
+        .settings2 div {
+            padding: .5rem 1rem;
+        }
+
+        .settings2 div.settings-in {
+            margin-top: .6rem;
+            margin-left: 1rem;
+        }
+
+        .settings {
+            color: white;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            z-index: 99999;
+            width: 20rem;
+            right: -20rem;
+            height: 100%;
+            position: absolute;
+            transition: .4s cubic-bezier(0.83, 0.13, 0.26, 0.81);
+        }
+
+        .settings.open {
+            right: -1rem;
+        }
+
+        .settings-btn {
+            margin: 0;
+            padding: 0;
+            padding: 1.6rem .3rem;
+            vertical-align: middle;
+            border-radius: 6px 0 0 6px;
+            text-align: center;
+            top: 50%;
+            right: 20rem;
+            display: none;
+            overflow: hidden;
+            position: absolute;
+            background-color: rgba(95, 95, 95, 0.651);
+            color: white;
+        }
+
+        .settings-btn.show {
+            display: block;
+        }
+
+        .settings2 {
+            margin: 0;
+            padding: 0;
+            background: rgba(128, 128, 128, 0.685);
+            width: 19rem;
+            height: 100%;
+        }
+    </style>
+    <div class="main-menu">
+        <span class="main-title">
+            <span class="main-title1">P</span><span class="main-title2">i</span><span class="main-title3">X</span>
+            <span>E</span><span>ngine</span>
+            <img src="images/logo.png">
+        </span>
+        <span class="main-description">Discrete Event Physics Simulation Engine</span>
+        <div class="main-btns">
+            <div>Sandbox</div>
+            <div>Explore</div>
+            <div>Solar System</div>
+            <div>Earth</div>
+        </div>
+        <div class="main-subview">
+            <div class="main-back-btn main-subview-btn" onclick="this.parentElement.classList.remove('show')">Back</div>
+            
+            <div class="main-subview2 main-explore">
+                <form onsubmit="Firebase.search(this.children[0].value);return false;">
+                    <input class="firebase-search-input" type="text">
+                    <button class="firebase-search-btn">Search</button>
+                </form>
+                <div class="firebase-search-results"></div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .firebase-search-results div {
+            background-color: #303030f7;
+            color: white;
+            padding: 1rem 8rem;
+            font-size: 1.5rem;
+            margin: 1rem;
+            transition: all .4s ease-in-out;
+        }
+
+        .firebase-search-results div:hover {
+            background-color: lime;
+            color: black;
+        }
+
+        .firebase-search-results {
+            padding-top: 2rem;
+            overflow: auto;
+            max-height: 30rem;
+        }
+
+        .main-subview-btn {
+            float: left;
+            top: 1rem;
+            font-size: 2rem;
+            padding: .7rem 5rem;
+        }
+
+        .main-subview2 {
+            position: absolute;
+            left: 6rem;
+            top: 7rem;
+            display: none;
+        }
+
+        .main-subview {
+            text-align: left;
+            z-index: 999999999;
+            background-color: #424242f7;
+            width: 84rem;
+            height: 46rem;
+            top: 1rem;
+            left: 1rem;
+            position: absolute;
+            display: none;
+        }
+
+        .main-subview.show,
+        .main-subview2.show {
+            display: block;
+        }
+
+        .main-title span:nth-last-child(2) {
+            font-size: 4.5rem;
+        }
+
+        .main-title span:nth-last-child(3) {
+            font-size: 6rem;
+            margin-left: -2rem;
+        }
+
+        .main-title span:nth-last-child(2) {
+            text-shadow: 2px -2px 0 #b6b6b6, 4px -4px 4px #1dff8e, 7px -7px 0 #808080
+        }
+
+        .main-title span:nth-last-child(3) {
+            text-shadow: 3px -3px 0 #30c57b
+        }
+
+        .main-title img {
+            width: 8.5rem;
+            height: 8.5rem;
+            position: absolute;
+            top: 5rem;
+            left: 38.5rem;
+        }
+
+        .main-menu {
+            user-select: none;
+            color: white;
+            z-index: 999999;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 2s linear;
+            text-align: -webkit-center;
+        }
+
+        .main-btns {
+            box-shadow: 0px 0px 13px 0px #5f5f5f;
+            border-radius: 10px;
+            width: 29rem;
+            height: 43rem;
+            transition: all .4s linear;
+            margin-left: 2rem;
+            position: absolute;
+        }
+
+        .main-btns:hover {
+            box-shadow: 0px 0px 13px 5px #777777;
+        }
+
+        .main-btns div {
+            position: relative;
+            top: 1rem;
+            font-size: 3rem;
+            margin: 4.9rem 1.9rem;
+            padding: .4rem 2rem;
+            color: #839eff;
+            width: fit-content;
+            border: 3px solid #577eac;
+            border-radius: 15px;
+            background-color: #000000cc;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFUlEQVQYV2NUZ8j8f5NhOiMjAxQAAChpAwOZIpGiAAAAAElFTkSuQmCC');
+            cursor: pointer;
+            transition: all .5s cubic-bezier(0.93, -0.79, 0.01, 1.91);
+            text-shadow: -5px 3px 10px red;
+        }
+
+        .main-btns div:hover {
+            color: #577bff;
+            text-shadow: 0px 0px 20px #b1c2ff;
+            box-shadow: inset 0px 0px 8px 0px #5c7fff;
+            padding: .6rem 2.6rem;
+            margin-left: 4rem;
+        }
+
+        .main-btns div::after {
+            display: block;
+            box-shadow: 0px 0px 8px;
+            content: '';
+            width: 18rem;
+            height: 3px;
+            bottom: -13px;
+            position: relative;
+            transform: scaleX(0);
+            transition: all .5s linear;
+            background: linear-gradient(90deg, rgb(255, 0, 0) 0%, rgb(255, 0, 212) 28%, rgb(51, 255, 0) 71%, rgb(255, 0, 0) 100%);
+        }
+
+        .main-btns div:hover::after {
+            transform: scaleX(1.1);
+        }
+
+        @font-face {
+            font-family: trajan-pro;
+            src: url(fonts/trajan-pro-bold.woff);
+        }
+
+        .main-title {
+            font-family: trajan-pro;
+            font-weight: bolder;
+            font-size: 10rem;
+            position: absolute;
+            left: 34rem;
+        }
+
+        .main-title2 {
+            font-family: cursive;
+            font-size: 9rem;
+        }
+
+        .main-title3 {
+            font-size: 11rem;
+        }
+
+        .main-title1 {
+            text-shadow: 2px -2px 0 red, 4px -4px 14px #868686, 7px -7px 0 red
+        }
+
+        .main-title2 {
+            text-shadow: 2px -2px 0 #b6b6b6, 4px -4px 14px #340bc7, 7px -7px 0 #808080
+        }
+
+        .main-title3 {
+            text-shadow: 2px -2px 0 red, 4px -4px 14px #8a8a8a, 7px -7px 0 red
+        }
+
+
+        .main-description {
+            font-size: 1.5rem;
+            font-style: italic;
+            top: 10.8rem;
+            left: 15.8rem;
+            position: relative;
+            text-shadow: 2px 0 5px #9e9e9e;
+        }
+
+
+        .main-menu.show {
+            opacity: 1;
+        }
+
+        .main-menu.hide {
+            opacity: 0;
+        }
+
+        .main-menu.hide {
+            transition: opacity .6s;
+        }
+    </style>
+    <script>
+        AudioPlayer.load('audio/pop.mp3', 'collision')
+        const canvas = document.getElementById('xview')
+        const onresize = (e) =>
+            [canvas.width, canvas.height] = [window.innerWidth, window.innerHeight]
+        window.addEventListener('resize', onresize)
+        const main = function Main() {
+            Settings.reset()
+            document.querySelector('#settings-input-G').value = CONSTANTS.G
+            document.body.background = window.backgroundImage
+            document.querySelector('#graphs').style.display = 'block'
+            canvas.style.display = 'block'
+            onresize()
+            const engine = new PhysicsEngine()
+            const renderer = new CanvasRenderer(canvas, engine)
+            window.renderer = renderer
+            window.engine = engine
+            Camera.init()
+            AudioPlayer.init()
+            Graphs.init()
+            renderer.begin()
+            document.querySelector('progress.loading-progress').classList.add('hide')
+            document.querySelector('div.loading-div').classList.add('hide')
+            setTimeout(() => document.body.querySelector('div.loading-div').style.display = 'none', 1000)
+            startIntro()
+        }
+    </script>
+    <div class="loading-div">
+        <progress class="loading-progress"></progress>
+    </div>
+    <style>
+        .loading-div {
+            background: linear-gradient(90deg, rgba(131, 58, 180, 1) 0%, rgba(253, 29, 29, 1) 50%, rgba(252, 176, 69, 1) 100%);
+            z-index: 999999;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transition: opacity .9s;
+        }
+
+        .loading-div.hide,
+        .loading-progress.hide {
+            opacity: 0;
+        }
+
+        .loading-progress {
+            transition: opacity .5s linear;
+            position: absolute;
+            top: 50%;
+            left: 30%;
+            text-align: center;
+            width: 500px;
+            height: 25px;
+            border: 0px none;
+            background: linear-gradient(90deg, #a4ff9c 0%, #b6ffe5 37%, #a7ffcd 73%, #b486ff 100%);
+            border-radius: 10px;
+            padding: 4px 5px 5px 5px;
+        }
+
+        .loading-progress::-webkit-progress-bar {
+            background: white;
+            border-radius: 50px;
+            padding: 2px;
+        }
+
+        .loading-progress::-webkit-progress-value {
+            border-radius: 50px;
+            background:
+                -webkit-linear-gradient(45deg, transparent, transparent 20%, rgba(0, 0, 0, 0.1) 33%, rgb(69, 159, 181) 50%, transparent 10%),
+                -webkit-linear-gradient(top, rgb(129, 206, 206), rgb(129, 197, 206)),
+                -webkit-linear-gradient(left, #48ba6e, #2dc467);
+            background-size: 25px 14px, 100% 100%, 100% 100%;
+            animation: move 5s linear 0 infinite;
+
+        }
+
+        body {
+            animation:
+                41s bgposx ease-in-out infinite alternate,
+                61s bgposy ease-in-out infinite alternate,
+                89s bgposs ease-in-out infinite alternate;
+        }
+
+        @keyframes bgposs {
+            form {
+                background-position-x: 0;
+            }
+
+            to {
+                background-position-x: 100px;
+            }
+        }
+
+
+        @keyframes bgposx {
+            form {
+                background-position-x: 0;
+            }
+
+            to {
+                background-position-x: 100px;
+            }
+        }
+
+        @keyframes bgposy {
+            form {
+                background-position-y: 0;
+            }
+
+            to {
+                background-position-y: 100px;
+            }
+        }
+    </style>
+    <div id="images" style="display: none"></div>
+    <script>
+        window.addEventListener('load', function loadAssets() {
+            const progress = document.body.querySelector('progress.loading-progress')
+            progress.max = 6531304
+            progress.value = 0
+
+            const onprogress = (path, total, loaded, xhr, ev) => {
+                progress.value += loaded - (xhr.z ? xhr.z : 0)
+                xhr.z = loaded
+            }
+
+            const images = document.querySelector("#images")
+            FileLoader.loadAsync('images/2k_stars_milky_way.jpg',
+                (path, data) => window.backgroundImage = URL.createObjectURL(data)
+                , onprogress
+            )
+            FileLoader.loadAllAsync(
+                solarSystemObjectList.map(x => `images/${x}.jpg`),
+                (path, data) => {
+                    if (path === undefined)
+                        main()
+                    else {
+                        const name = path.match(/images\/(.*)\.jpg/)[1]
+                        const i = document.createElement('img')
+                        i.id = 'img_' + name
+                        i.src = URL.createObjectURL(data)
+                        images.appendChild(i)
+                    }
+                },
+                onprogress
+            )
+        })
+    </script>
+</body>
+
+</html>
